@@ -268,7 +268,7 @@ enum perfmon_ioctl {
 #define ARM_16K_TT_L1_SIZE          0x0000001000000000ull
 #define ARM_16K_TT_L1_OFFMASK       0x0000000fffffffffull
 #define ARM_16K_TT_L1_SHIFT         36
-#define ARM_16K_TT_L1_INDEX_MASK    0x00007ff000000000ull
+#define ARM_16K_TT_L1_INDEX_MASK    0x0000007000000000ull
 
 #define ARM_16K_TT_L2_SIZE          0x0000000002000000ull
 #define ARM_16K_TT_L2_OFFMASK       0x0000000001ffffffull
