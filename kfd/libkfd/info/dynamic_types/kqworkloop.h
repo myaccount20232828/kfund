@@ -27,6 +27,9 @@ const struct kqworkloop kqworkloop_versions[] = {
     
     { .kqwl_state = 0x10, .kqwl_p = 0x18, .kqwl_owner = 0xd0, .kqwl_dynamicid = 0xe8, .object_size = 0x108 }, // iOS 15.4 - 15.7.8 arm64
     { .kqwl_state = 0x10, .kqwl_p = 0x18, .kqwl_owner = 0xd0, .kqwl_dynamicid = 0xe8, .object_size = 0x108 }, // iOS 15.4 - 15.7.2 arm64e
+    
+    { .kqwl_state = 0x10, .kqwl_p = 0x18, .kqwl_owner = 0xd0, .kqwl_dynamicid = 0xe8, .object_size = 0x108 }, // iOS 14.0 - 14.4
+    { .kqwl_state = 0x10, .kqwl_p = 0x18, .kqwl_owner = 0xd0, .kqwl_dynamicid = 0xe8, .object_size = 0x108 }, // iOS 14.5 - 14.8.1
 };
 
 typedef u16 kqworkloop_kqwl_state_t;

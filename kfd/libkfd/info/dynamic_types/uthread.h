@@ -24,6 +24,9 @@ const struct uthread uthread_versions[] = {
     
     { .object_size = 0x1b0 }, // iOS 15.4 - 15.7.8 arm64
     { .object_size = 0x1b0 }, // iOS 15.4 - 15.7.8 arm64e
+    
+    { .object_size = 0x1b0 }, // iOS 14.0 - 14.4
+    { .object_size = 0x1b0 }, // iOS 14.5 - 14.8.1
 };
 
 #endif /* uthread_h */
