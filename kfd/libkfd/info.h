@@ -177,11 +177,10 @@ void info_init(struct kfd* kfd)
         .rlim_max = kfd->info.env.maxfilesperproc
     };
     assert_bsd(setrlimit(RLIMIT_NOFILE, &rlim));
-
-    usize size2 = sizeof(kfd->info.env.osversion);
-    assert_bsd(sysctlbyname("kern.osversion", &kfd->info.env.osversion, &size2, NULL, 0));
     
     if (@available(iOS 16, *)) {
+        usize size2 = sizeof(kfd->info.env.osversion);
+        assert_bsd(sysctlbyname("kern.osversion", &kfd->info.env.osversion, &size2, NULL, 0));
         switch (*(u64*)(&kfd->info.env.osversion)) {
             case ios_16_3:
             case ios_16_3_1: {
