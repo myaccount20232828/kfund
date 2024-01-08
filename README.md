@@ -1,3 +1,5 @@
+> Quick disclaimer: I have no intention of adding offsets for other devices and iOS versions.
+
 # kfd
 
 kfd, short for kernel file descriptor, is a project to read and write kernel memory on Apple
@@ -13,6 +15,7 @@ of libkfd is quite small and intuitive:
 enum puaf_method {
     puaf_physpuppet,
     puaf_smith,
+    puaf_landa,
 };
 
 enum kread_method {
@@ -39,10 +42,16 @@ void kclose(u64 kfd);
         - This method exploits [CVE-2023-23536][1].
         - Fixed in iOS 16.4 and macOS 13.3.
         - Reachable from the App Sandbox but not the WebContent sandbox.
+        - $52,500 Apple Security Bounty reward.
     - `puaf_smith`:
         - This method exploits [CVE-2023-32434][2].
         - Fixed in iOS 16.5.1 and macOS 13.4.1.
         - Reachable from the WebContent sandbox and might have been actively exploited.
+    - `puaf_landa`:
+        - This method exploits [CVE-2023-41974][3].
+        - Fixed in iOS 17.0 and macOS 14.0.
+        - Reachable from the App Sandbox but not the WebContent sandbox.
+        - $70,000 Apple Security Bounty reward.
 - `kread_method`: The method used to obtain the initial `kread()` primitive.
 - `kwrite_method`: The method used to obtain the initial `kwrite()` primitive.
 
@@ -62,30 +71,7 @@ argument.
 
 [1]: https://support.apple.com/en-us/HT213676
 [2]: https://support.apple.com/en-us/HT213814
-
----
-
-## What are the supported OS versions and devices?
-
-The later stage of the exploit makes use of various offsets. For the structures that have identical
-offsets across all versions that I tested, I simply included their definitions under the
-[static_types](kfd/libkfd/info/static_types/) folder. For the structures that have different
-offsets, I built offset tables for them under the [dynamic_types](kfd/libkfd/info/dynamic_types/)
-folder. Then, I map the "kern.osversion" of the device to the appropriate index for those offset
-tables. Please check the function `info_init()`, located in [info.h](kfd/libkfd/info.h), for the
-list of currently supported iOS and macOS versions. However, please note that I only tested the
-exploits on an iPhone 14 Pro Max and a MacBook Air (M2 2022). Therefore, it is possible that the
-offsets are actually different on other devices, even for the same OS version. Keep this in mind if
-you get a "Kernel data abort" panic on a "supported" version. Fortunately, those offsets should all
-be easily retrievable from the XNU source code.
-
-On the other hand, in order to bootstrap the better KRKW primitive, the exploit makes use of certain
-static addresses which must be retrieved from the kernelcache. This is a tedious process, which I
-only carried out for the kernelcaches of certain iOS versions on the iPhone 14 Pro Max. Please check
-the function `perf_init()`, located in [perf.h](kfd/libkfd/perf.h), for the list of currently
-supported versions. Note that none of the exploits require the better KRKW primitive in order to
-succeed. However, if you plan on doing research based on this project, then it is probably
-worthwhile to add support for the better KRKW primitive for your own device!
+[3]: https://support.apple.com/en-us/HT213938
 
 ---
 
@@ -123,8 +109,9 @@ exploits in a dedicated write-up:
 In addition, I have split the vulnerability-specific part of the exploits used to achieve the PUAF
 primitive into distinct write-ups, listed below in chronological order of discovery:
 
--   [PhysPuppet](writeups/physpuppet.md)
--   [Smith](writeups/smith.md)
+- [PhysPuppet](writeups/physpuppet.md)
+- [Smith](writeups/smith.md)
+- [Landa](writeups/landa.md)
 
 However, please note that these write-ups have been written for an audience that is already familiar
 with the XNU virtual memory system.

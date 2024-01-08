@@ -79,11 +79,12 @@ void kwrite_IOSurface_kwrite_u64(struct kfd* kfd, u64 kaddr, u64 new_value)
         krwObject = objectStorage[kfd->kwrite.krkw_object_id];
     }
     
-    u64 backup = dynamic_uget(IOSurface, IndexedTimestampPtr, iosurface_uaddr);
-    dynamic_uset(IOSurface, IndexedTimestampPtr, iosurface_uaddr, kaddr);
+    u64 backup = *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__indexedTimestampPtr));
+    *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__indexedTimestampPtr)) = kaddr;
     
+
     set_indexed_timestamp(krwObject.port, krwObject.surface_id, 0, new_value);
-    dynamic_uset(IOSurface, IndexedTimestampPtr, iosurface_uaddr, backup);
+    *(u64 *)(iosurface_uaddr + dynamic_info(IOSurface__indexedTimestampPtr)) = backup;
 }
 
 
