@@ -166,7 +166,7 @@ u64 patchfind_kernproc(struct kfd* kfd, u64 kernel_base)
     
     u64 ldrKaddr = 0;
     u32 ldrInstr = 0;
-    for (u32 i = 0; i < 20; i++) {
+    for (u32 i = 0; i < 100; i++) {
         u64 addr = movKaddr+(4*i);
         u32 instr = 0;
         kread((u64)kfd, addr, &instr, sizeof(instr));
@@ -188,7 +188,7 @@ u64 patchfind_kernproc(struct kfd* kfd, u64 kernel_base)
     
     u64 adrpKaddr = 0;
     u32 adrpInstr = 0;
-    for (u32 i = 0; i < 30; i++) {
+    for (u32 i = 0; i < 100; i++) {
         u64 addr = ldrKaddr-(4*i);
         u32 instr = 0;
         kread((u64)kfd, addr, &instr, sizeof(instr));
